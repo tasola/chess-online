@@ -17,11 +17,13 @@ public class Board extends JPanel implements IBoard, ActionListener {
     private Piece thisPiece;
     private Square thisSquare;
     private boolean previewClick = true;
+    private Client client;
 
 
-    Board(Game game, int xDim, int yDim){
+    Board(Game game, int xDim, int yDim, String[] customConnection){
         this.squares = new Square[xDim][yDim];
         this.game = game;
+        this.client = new Client(customConnection, this);
 
         for (int x = 0; x < xDim; x++){
             for (int y = 0; y < yDim; y++){
@@ -47,6 +49,10 @@ public class Board extends JPanel implements IBoard, ActionListener {
 
     public Square[][] getSquares(){
         return this.squares;
+    }
+
+    public Square getSquareByCoordinates(int xPos, int yPos) {
+        return this.squares[xPos][yPos];
     }
 
     // Is not used at the moment
@@ -115,5 +121,15 @@ public class Board extends JPanel implements IBoard, ActionListener {
         thisSquare.setEmpty();
         whiteTurn = !whiteTurn;
         game.changeTurn(whiteTurn);
+        client.send(destinationSquare.getxPos(), destinationSquare.getyPos());
+    }
+
+    public void opponentMove(String point) {
+        String[] xy = point.split(" ");
+        int xPos = Integer.parseInt(xy[0]);
+        int yPos = Integer.parseInt(xy[1]);
+        Square destinationSquare = getSquareByCoordinates(xPos, yPos);
+        Pawn pawn = new Pawn(Color.white);
+        destinationSquare.setPiece(pawn);
     }
 }

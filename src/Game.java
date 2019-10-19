@@ -14,8 +14,12 @@ public class Game extends JFrame {
     JPanel blackPanel = new JPanel(new GridLayout(4,4));
     JLabel turnLabel = new JLabel("White's turn");
 
-    Game(){
-        Board board = new Board(this,8, 8);
+    public static void main(String[] customConnection) {
+        new Game(customConnection);
+    }
+
+    Game(String[] customConnection){
+        Board board = new Board(this,8, 8, customConnection);
         this.squares = board.getSquares();
 
         JPanel boardPanel = new JPanel();
