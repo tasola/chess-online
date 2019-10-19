@@ -9,18 +9,23 @@ public class Game extends JFrame {
     private ArrayList<Piece> killedWhitePieces = new ArrayList<>();
     private ArrayList<Piece> killedBlackPieces = new ArrayList<>();
     private String winner = "";
+    private boolean yourTurn;
+    private Board board;
 
     JPanel whitePanel = new JPanel(new GridLayout(4,4));
     JPanel blackPanel = new JPanel(new GridLayout(4,4));
-    JLabel turnLabel = new JLabel("White's turn");
+    JLabel turnLabel = new JLabel();
 
     public static void main(String[] customConnection) {
         new Game(customConnection);
     }
 
     Game(String[] customConnection){
-        Board board = new Board(this,8, 8, customConnection);
-        this.squares = board.getSquares();
+        this.yourTurn = (customConnection[0].equals("2000"));
+        String player = yourTurn ? "White" : "Black";
+        turnLabel.setText(player);
+        this.board = new Board(this,8, 8, customConnection);
+        this.squares = this.board.getSquares();
 
         JPanel boardPanel = new JPanel();
         this.setTitle("Chess");
@@ -42,7 +47,7 @@ public class Game extends JFrame {
 
         turnPanel.add(turnLabel);
         add(turnPanel, BorderLayout.NORTH);
-        add(board, BorderLayout.CENTER);
+        add(this.board, BorderLayout.CENTER);
         killPanel.add(whitePanel, BorderLayout.NORTH);
         killPanel.add(blackPanel, BorderLayout.NORTH);
         add(killPanel, BorderLayout.SOUTH);
@@ -74,9 +79,10 @@ public class Game extends JFrame {
         else squares[y][x].setPiece(new King(color));
     }
 
-    void changeTurn(boolean isWhite){
+    void changeTurn(boolean yourTurn){
+        this.yourTurn = yourTurn;
         if(winner.length() > 0) return;
-        String turn = isWhite ? "White's" : "Black's";
+        String turn = yourTurn ? "Your" : "Opponent's";
         turnLabel.setText(turn + " turn!");
     }
 
@@ -85,12 +91,12 @@ public class Game extends JFrame {
         else killedBlackPieces.add(killedPiece);
         addToGUI(killedPiece, isBlack);
         if(killedPiece.getClass().toString().equals("class King")){
-            setWinner(isBlack);
+            setWinner();
         }
     }
 
-    private void setWinner (boolean blackLost){
-        winner = blackLost ? "White" : "Black";
+    private void setWinner (){
+        winner = this.yourTurn ? "You" : "Opponent";
         turnLabel.setText(winner + " WON!");
     }
 

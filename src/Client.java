@@ -3,7 +3,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.awt.*;
 
 public class Client extends Thread
 {
@@ -37,12 +36,14 @@ public class Client extends Thread
     }
 
     // Use a DatagramPacket to send the point to the receiverPort (the other client)
-    public void send(Integer xPos, Integer yPos) {
-        String point = xPos + " " + yPos;
+    public void send(Square startSquare, Square endSquare) {
+        String point = startSquare.getxPos() + " " + startSquare.getyPos() + " ";
+        point += endSquare.getxPos() + " " + endSquare.getyPos();
         try {
             byte[] byteArr = point.getBytes();
             DatagramPacket datagramPacket = new DatagramPacket(byteArr, byteArr.length, InetAddress.getByName(this.host), this.receiverPort);
             datagramSocket.send(datagramPacket);
+            this.board.changeWaitingForOpponent();
         }
         catch (IOException ioe) {
             System.out.println("Client send() IOException" + ioe);

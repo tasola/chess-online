@@ -18,12 +18,16 @@ public class Board extends JPanel implements IBoard, ActionListener {
     private Square thisSquare;
     private boolean previewClick = true;
     private Client client;
+    private int port;
+    private boolean waitingForOpponent;
 
 
     Board(Game game, int xDim, int yDim, String[] customConnection){
         this.squares = new Square[xDim][yDim];
         this.game = game;
         this.client = new Client(customConnection, this);
+        this.port = Integer.parseInt(customConnection[0]);
+        this.waitingForOpponent = !(this.port == 2000);
 
         for (int x = 0; x < xDim; x++){
             for (int y = 0; y < yDim; y++){
@@ -61,8 +65,9 @@ public class Board extends JPanel implements IBoard, ActionListener {
     }
 
     private Color currentColor(){
-        if (whiteTurn) return Color.white;
-        return Color.black;
+//        if (whiteTurn) return Color.white;
+//        return Color.black;
+        return (this.port == 2000) ? Color.white : Color.black;
     }
 
     @Override
@@ -75,7 +80,7 @@ public class Board extends JPanel implements IBoard, ActionListener {
             this.enablePreview(selectedSquare);
         }
         // If second click and you click a square to which you can move, move there
-        else if (!previewClick && possibleMoves.contains(selectedSquare)) {
+        else if (!waitingForOpponent && !previewClick && possibleMoves.contains(selectedSquare)) {
             previewClick = true;
             this.disablePreview();
             if (selectedSquare.isConquerable(currentColor())){
@@ -111,25 +116,35 @@ public class Board extends JPanel implements IBoard, ActionListener {
         }
     }
 
-    public void move(Square destinationSquare){
+    public void changeWaitingForOpponent() {
+        this.waitingForOpponent = !this.waitingForOpponent;
+    }
+
+    private void move(Square startSquare, Square destinationSquare) {
+        Piece pieceMoved = startSquare.getPiece();
         if (!destinationSquare.isEmpty()){
             Piece killedPiece = destinationSquare.getPiece();
             game.addKill(killedPiece, whiteTurn);
         }
-        if (thisPiece.isPawnsFirstMove()) thisPiece.hasMoved();
-        destinationSquare.setPiece(thisPiece);
-        thisSquare.setEmpty();
-        whiteTurn = !whiteTurn;
-        game.changeTurn(whiteTurn);
-        client.send(destinationSquare.getxPos(), destinationSquare.getyPos());
+        if (pieceMoved.isPawnsFirstMove()) pieceMoved.hasMoved();
+        destinationSquare.setPiece(pieceMoved);
+        startSquare.setEmpty();
+//        whiteTurn = !whiteTurn;
+//        game.changeTurn(whiteTurn);
     }
 
-    public void opponentMove(String point) {
-        String[] xy = point.split(" ");
-        int xPos = Integer.parseInt(xy[0]);
-        int yPos = Integer.parseInt(xy[1]);
-        Square destinationSquare = getSquareByCoordinates(xPos, yPos);
-        Pawn pawn = new Pawn(Color.white);
-        destinationSquare.setPiece(pawn);
+    public void move(Square destinationSquare){
+        move(thisSquare, destinationSquare);
+        client.send(thisSquare, destinationSquare);
+        game.changeTurn(!waitingForOpponent);
+    }
+
+    public void opponentMove(String points) {
+        String[] xyxy = points.split(" ");
+        Square startSquare = getSquareByCoordinates(Integer.parseInt(xyxy[0]), Integer.parseInt(xyxy[1]));
+        Square destinationSquare = getSquareByCoordinates(Integer.parseInt(xyxy[2]), Integer.parseInt(xyxy[3]));
+        move(startSquare, destinationSquare);
+        changeWaitingForOpponent();
+        game.changeTurn(!waitingForOpponent);
     }
 }
